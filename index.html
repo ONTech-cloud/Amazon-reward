@@ -64,7 +64,7 @@
     <div id="couponCode">Votre code : <span>AMAZONGIFT2025</span></div>
   </div>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK + Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
@@ -81,7 +81,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function getLocation() {
+    // 👇 Rendre accessible depuis le bouton HTML
+    window.getLocation = async function () {
       if (!navigator.geolocation) {
         alert("La géolocalisation n'est pas supportée par ce navigateur.");
         return;
@@ -92,7 +93,6 @@
         const lon = position.coords.longitude;
 
         try {
-          // Obtenir l'adresse lisible
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
           const data = await res.json();
           const address = data.address;
@@ -113,7 +113,7 @@
           document.getElementById("couponCode").style.display = "block";
         } catch (error) {
           alert("Erreur : impossible d'obtenir votre position exacte.");
-          console.error(error);
+          console.error("Erreur reverse geocoding ou Firebase :", error);
         }
       }, (error) => {
         alert("Erreur de géolocalisation : " + error.message);
