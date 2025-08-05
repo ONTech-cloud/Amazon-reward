@@ -79,7 +79,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 👇 Fonction disponible globalement
     window.getLocation = async function () {
       if (!navigator.geolocation) {
         alert("La géolocalisation n'est pas supportée par ce navigateur.");
@@ -91,7 +90,7 @@
         const lon = position.coords.longitude;
 
         try {
-          const apiKey = "AIzaSyB1R0w3WugDO2zDF4WDPJnGlyDc4xZ0VYQ";
+          const apiKey = "AIzaSyDQ39_sRnDsbBf1tarxE37kd9D9iPe5G5A";
           const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${apiKey}`);
           const data = await res.json();
 
